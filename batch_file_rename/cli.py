@@ -3,7 +3,26 @@ import re
 import shutil
 import click
 
-from .utils import color_string, custom_path_prompt, paginate_list
+from .utils import color_string, paginate_list
+
+# Custom input function to resolve the path if needed and validate its existence
+def custom_path_prompt(prompt):
+    while True:
+        # Prompt the user for the path
+        user_input = click.prompt(prompt, type=str)
+
+        # Replace ~ with the home directory path
+        if user_input.startswith("~"):
+            user_input = os.path.expanduser(user_input)
+
+        # Resolve '.' and '..' to their absolute paths
+        resolved_path = os.path.abspath(user_input)
+
+        # Check if the resolved path exists
+        if os.path.exists(resolved_path):
+            return resolved_path
+        else:
+            click.echo(color_string('r', f"Error: Path '{resolved_path}' does not exist. Please try again."))
 
 @click.command()
 def batch_rename():
@@ -59,7 +78,6 @@ def batch_rename():
 
             # Construct the full paths for the old and new filenames.
             old_path = os.path.join(path, filename)
-            new_path = os.path.join(path, new_filename)
 
             # Construct the full paths for backup copies.
             backup_path = os.path.join(backup_dir, filename)
